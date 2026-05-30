@@ -5,94 +5,123 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import RandomForestRegressor
 
-# ==========================================
+# ==================================================
 # PAGE CONFIG
-# ==========================================
+# ==================================================
 
 st.set_page_config(
-    page_title="WeatherAI",
-    page_icon="🌦",
-    layout="wide"
+    page_title="Weather & Temperature Prediction",
+    layout="centered"
 )
 
-# ==========================================
+# ==================================================
 # CUSTOM CSS
-# ==========================================
+# ==================================================
 
 st.markdown("""
 <style>
 
-#MainMenu {visibility:hidden;}
-footer {visibility:hidden;}
-header {visibility:hidden;}
+#MainMenu {
+    visibility: hidden;
+}
 
-.stApp{
+footer {
+    visibility: hidden;
+}
+
+header {
+    visibility: hidden;
+}
+
+.stApp {
     background: linear-gradient(
         135deg,
         #0f172a,
         #1e293b,
-        #0f172a
+        #334155
     );
 }
 
+.block-container {
+    max-width: 850px;
+    padding-top: 3rem;
+}
+
 .hero {
-    text-align:center;
-    padding:40px 20px;
+    text-align: center;
+    margin-bottom: 40px;
 }
 
-.hero h1{
-    font-size:4rem;
-    color:white;
-    margin-bottom:10px;
+.hero h1 {
+    color: white;
+    font-size: 3rem;
+    margin-bottom: 10px;
 }
 
-.hero p{
-    color:#cbd5e1;
-    font-size:1.2rem;
+.hero p {
+    color: #cbd5e1;
+    font-size: 1.15rem;
 }
 
-.card{
+.card {
     background: rgba(255,255,255,0.08);
-    backdrop-filter: blur(12px);
-    border-radius:20px;
-    padding:25px;
-    border:1px solid rgba(255,255,255,0.1);
-}
-
-.result-card{
-    background: rgba(255,255,255,0.12);
     backdrop-filter: blur(15px);
-    border-radius:25px;
-    padding:30px;
-    text-align:center;
-    margin-top:20px;
+    border-radius: 20px;
+    padding: 30px;
+    border: 1px solid rgba(255,255,255,0.12);
 }
 
-.result-weather{
-    font-size:50px;
-    font-weight:bold;
-    color:white;
+.result-card {
+    background: rgba(255,255,255,0.10);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    padding: 30px;
+    margin-top: 30px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.15);
 }
 
-.result-temp{
-    font-size:42px;
-    color:#38bdf8;
-    font-weight:bold;
+.result-weather {
+    font-size: 42px;
+    font-weight: bold;
+    color: white;
 }
 
-.small-text{
-    color:#cbd5e1;
-    font-size:18px;
+.result-temp {
+    font-size: 34px;
+    font-weight: bold;
+    color: #38bdf8;
+}
+
+.result-message {
+    color: #cbd5e1;
+    font-size: 18px;
+}
+
+div.stButton > button {
+    width: 100%;
+    height: 55px;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+label {
+    color: white !important;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-# ==========================================
-# LOAD DATA
-# ==========================================
+# ==================================================
+# LOAD DATASET
+# ==================================================
 
 data = pd.read_csv("weather.csv")
+
+# ==================================================
+# PREPROCESSING
+# ==================================================
 
 label_encoder = LabelEncoder()
 
@@ -102,9 +131,9 @@ data["WeatherConditionEncoded"] = label_encoder.fit_transform(
 
 X = data[["Humidity", "Wind Speed", "Pressure"]]
 
-# ==========================================
-# MODELS
-# ==========================================
+# ==================================================
+# CLASSIFICATION MODEL
+# ==================================================
 
 classifier = RandomForestClassifier(
     n_estimators=100,
@@ -116,6 +145,10 @@ classifier.fit(
     data["WeatherConditionEncoded"]
 )
 
+# ==================================================
+# REGRESSION MODEL
+# ==================================================
+
 regressor = RandomForestRegressor(
     n_estimators=100,
     random_state=42
@@ -126,63 +159,57 @@ regressor.fit(
     data["Temperature"]
 )
 
-# ==========================================
+# ==================================================
 # HERO SECTION
-# ==========================================
+# ==================================================
 
 st.markdown("""
 <div class="hero">
-    <h1>🌦 WeatherAI</h1>
+    <h1>🌦 Weather & Temperature Prediction</h1>
     <p>
-        AI Powered Weather Forecasting Platform
+        Predict weather conditions and temperature using machine learning
     </p>
 </div>
 """, unsafe_allow_html=True)
 
-# ==========================================
+# ==================================================
 # INPUT CARD
-# ==========================================
+# ==================================================
 
 st.markdown('<div class="card">', unsafe_allow_html=True)
 
-st.subheader("Enter Weather Parameters")
+humidity = st.number_input(
+    "Humidity (%)",
+    min_value=0.0,
+    max_value=100.0,
+    value=50.0,
+    step=1.0
+)
 
-col1, col2, col3 = st.columns(3)
+windspeed = st.number_input(
+    "Wind Speed (km/h)",
+    min_value=0.0,
+    value=10.0,
+    step=1.0
+)
 
-with col1:
-    humidity = st.slider(
-        "Humidity (%)",
-        0,
-        100,
-        50
-    )
-
-with col2:
-    windspeed = st.slider(
-        "Wind Speed",
-        0,
-        50,
-        10
-    )
-
-with col3:
-    pressure = st.slider(
-        "Pressure",
-        900,
-        1100,
-        1000
-    )
+pressure = st.number_input(
+    "Pressure (hPa)",
+    min_value=900.0,
+    max_value=1100.0,
+    value=1000.0,
+    step=1.0
+)
 
 predict = st.button(
-    "🚀 Generate Forecast",
-    use_container_width=True
+    "Generate Forecast"
 )
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# ==========================================
+# ==================================================
 # PREDICTION
-# ==========================================
+# ==================================================
 
 if predict:
 
@@ -211,30 +238,26 @@ if predict:
 
     icons = {
         "Sunny": "☀️",
-        "Rainy": "🌧️",
         "Cloudy": "☁️",
+        "Rainy": "🌧️",
         "Stormy": "⛈️"
     }
 
-    tips = {
-        "Sunny":
-            "Perfect weather for outdoor activities.",
-        "Rainy":
-            "Carry an umbrella before heading out.",
-        "Cloudy":
-            "Comfortable conditions expected today.",
-        "Stormy":
-            "Avoid outdoor travel if possible."
+    messages = {
+        "Sunny": "Perfect weather for outdoor activities.",
+        "Cloudy": "Comfortable conditions expected.",
+        "Rainy": "Carry an umbrella before heading out.",
+        "Stormy": "Avoid outdoor travel if possible."
     }
 
     icon = icons.get(weather, "🌤")
-    tip = tips.get(weather, "")
+    message = messages.get(weather, "")
 
     st.markdown(
         f"""
         <div class="result-card">
 
-            <div class="result-weather">
+            <div style="font-size:70px;">
                 {icon}
             </div>
 
@@ -250,28 +273,11 @@ if predict:
 
             <br>
 
-            <div class="small-text">
-                {tip}
+            <div class="result-message">
+                {message}
             </div>
 
         </div>
         """,
         unsafe_allow_html=True
     )
-
-# ==========================================
-# EXTRA SECTION
-# ==========================================
-
-st.markdown("<br><br>", unsafe_allow_html=True)
-
-c1, c2, c3 = st.columns(3)
-
-with c1:
-    st.info("⚡ Instant AI Prediction")
-
-with c2:
-    st.info("🌎 Real-Time Style Dashboard")
-
-with c3:
-    st.info("🤖 Powered by Machine Learning")
