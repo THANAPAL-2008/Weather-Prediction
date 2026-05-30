@@ -36,8 +36,8 @@ header {visibility:hidden;}
 }
 
 .block-container{
-    max-width:900px;
-    padding-top:2rem;
+    padding-top:3rem;
+    max-width:850px;
 }
 
 .main-title{
@@ -50,23 +50,16 @@ header {visibility:hidden;}
 .subtitle{
     text-align:center;
     color:#cbd5e1;
-    font-size:1.15rem;
-    margin-bottom:35px;
+    font-size:1.2rem;
+    margin-bottom:30px;
 }
 
 .result-box{
-    padding:35px;
+    background: rgba(255,255,255,0.08);
+    padding:30px;
     border-radius:20px;
     text-align:center;
     margin-top:25px;
-}
-
-div.stButton > button{
-    width:100%;
-    height:55px;
-    border-radius:12px;
-    font-size:18px;
-    font-weight:bold;
 }
 
 </style>
@@ -91,7 +84,7 @@ data["WeatherConditionEncoded"] = label_encoder.fit_transform(
 X = data[["Humidity", "Wind Speed", "Pressure"]]
 
 # ==========================================
-# CLASSIFIER
+# MODELS
 # ==========================================
 
 classifier = RandomForestClassifier(
@@ -103,10 +96,6 @@ classifier.fit(
     X,
     data["WeatherConditionEncoded"]
 )
-
-# ==========================================
-# REGRESSOR
-# ==========================================
 
 regressor = RandomForestRegressor(
     n_estimators=100,
@@ -143,36 +132,32 @@ unsafe_allow_html=True
 st.markdown("---")
 
 # ==========================================
-# INPUT SECTION
+# INPUTS
 # ==========================================
 
-col1, col2, col3 = st.columns(3)
+humidity = st.number_input(
+    "Humidity (%)",
+    min_value=0.0,
+    max_value=100.0,
+    value=50.0
+)
 
-with col1:
-    humidity = st.number_input(
-        "Humidity (%)",
-        min_value=0.0,
-        max_value=100.0,
-        value=50.0
-    )
+windspeed = st.number_input(
+    "Wind Speed (km/h)",
+    min_value=0.0,
+    value=10.0
+)
 
-with col2:
-    windspeed = st.number_input(
-        "Wind Speed (km/h)",
-        min_value=0.0,
-        value=10.0
-    )
-
-with col3:
-    pressure = st.number_input(
-        "Pressure (hPa)",
-        min_value=900.0,
-        max_value=1100.0,
-        value=1000.0
-    )
+pressure = st.number_input(
+    "Pressure (hPa)",
+    min_value=900.0,
+    max_value=1100.0,
+    value=1000.0
+)
 
 predict = st.button(
-    "Predict Weather"
+    "Generate Forecast",
+    use_container_width=True
 )
 
 # ==========================================
@@ -181,28 +166,26 @@ predict = st.button(
 
 if predict:
 
-    with st.spinner("Generating forecast..."):
+    custom_data = pd.DataFrame(
+        [[humidity, windspeed, pressure]],
+        columns=[
+            "Humidity",
+            "Wind Speed",
+            "Pressure"
+        ]
+    )
 
-        custom_data = pd.DataFrame(
-            [[humidity, windspeed, pressure]],
-            columns=[
-                "Humidity",
-                "Wind Speed",
-                "Pressure"
-            ]
-        )
+    weather_prediction = classifier.predict(
+        custom_data
+    )
 
-        weather_prediction = classifier.predict(
-            custom_data
-        )
+    weather_name = label_encoder.inverse_transform(
+        weather_prediction
+    )
 
-        weather_name = label_encoder.inverse_transform(
-            weather_prediction
-        )
-
-        temperature_prediction = regressor.predict(
-            custom_data
-        )
+    temperature_prediction = regressor.predict(
+        custom_data
+    )
 
     weather = weather_name[0]
 
@@ -220,45 +203,35 @@ if predict:
         "Stormy": "Avoid outdoor travel if possible."
     }
 
-    colors = {
-        "Sunny": "#f59e0b",
-        "Cloudy": "#94a3b8",
-        "Rainy": "#38bdf8",
-        "Stormy": "#a855f7"
-    }
-
     icon = icons.get(weather, "🌤")
     message = messages.get(weather, "")
-    color = colors.get(weather, "#38bdf8")
 
     st.markdown(
-        f"""
-        <div class="result-box"
-             style="
-             background:rgba(255,255,255,0.08);
-             border:1px solid rgba(255,255,255,0.15);
-             ">
+        '<div class="result-box">',
+        unsafe_allow_html=True
+    )
 
-            <div style="font-size:70px;">
-                {icon}
-            </div>
+    st.markdown(
+        f"<h1 style='text-align:center'>{icon}</h1>",
+        unsafe_allow_html=True
+    )
 
-            <h1 style="color:white;">
-                {weather}
-            </h1>
+    st.markdown(
+        f"<h2 style='text-align:center'>{weather}</h2>",
+        unsafe_allow_html=True
+    )
 
-            <h2 style="color:{color};
-                       font-size:42px;">
-                {round(temperature_prediction[0],2)} °C
-            </h2>
+    st.markdown(
+        f"<h1 style='text-align:center;color:#38bdf8'>{round(temperature_prediction[0],2)} °C</h1>",
+        unsafe_allow_html=True
+    )
 
-            <p style="
-               color:#cbd5e1;
-               font-size:18px;">
-               {message}
-            </p>
+    st.markdown(
+        f"<p style='text-align:center'>{message}</p>",
+        unsafe_allow_html=True
+    )
 
-        </div>
-        """,
+    st.markdown(
+        "</div>",
         unsafe_allow_html=True
     )
