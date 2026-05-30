@@ -5,35 +5,28 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import RandomForestRegressor
 
-# ==================================================
+# ==========================================
 # PAGE CONFIG
-# ==================================================
+# ==========================================
 
 st.set_page_config(
     page_title="Weather & Temperature Prediction",
+    page_icon="🌦",
     layout="centered"
 )
 
-# ==================================================
+# ==========================================
 # CUSTOM CSS
-# ==================================================
+# ==========================================
 
 st.markdown("""
 <style>
 
-#MainMenu {
-    visibility: hidden;
-}
+#MainMenu {visibility:hidden;}
+footer {visibility:hidden;}
+header {visibility:hidden;}
 
-footer {
-    visibility: hidden;
-}
-
-header {
-    visibility: hidden;
-}
-
-.stApp {
+.stApp{
     background: linear-gradient(
         135deg,
         #0f172a,
@@ -42,86 +35,45 @@ header {
     );
 }
 
-.block-container {
-    max-width: 850px;
-    padding-top: 3rem;
+.block-container{
+    padding-top:3rem;
+    max-width:850px;
 }
 
-.hero {
-    text-align: center;
-    margin-bottom: 40px;
+.main-title{
+    text-align:center;
+    color:white;
+    font-size:3rem;
+    font-weight:bold;
 }
 
-.hero h1 {
-    color: white;
-    font-size: 3rem;
-    margin-bottom: 10px;
+.subtitle{
+    text-align:center;
+    color:#cbd5e1;
+    font-size:1.2rem;
+    margin-bottom:30px;
 }
 
-.hero p {
-    color: #cbd5e1;
-    font-size: 1.15rem;
-}
-
-.card {
+.result-box{
     background: rgba(255,255,255,0.08);
-    backdrop-filter: blur(15px);
-    border-radius: 20px;
-    padding: 30px;
-    border: 1px solid rgba(255,255,255,0.12);
-}
-
-.result-card {
-    background: rgba(255,255,255,0.10);
-    backdrop-filter: blur(15px);
-    border-radius: 20px;
-    padding: 30px;
-    margin-top: 30px;
-    text-align: center;
-    border: 1px solid rgba(255,255,255,0.15);
-}
-
-.result-weather {
-    font-size: 42px;
-    font-weight: bold;
-    color: white;
-}
-
-.result-temp {
-    font-size: 34px;
-    font-weight: bold;
-    color: #38bdf8;
-}
-
-.result-message {
-    color: #cbd5e1;
-    font-size: 18px;
-}
-
-div.stButton > button {
-    width: 100%;
-    height: 55px;
-    border-radius: 12px;
-    font-size: 18px;
-    font-weight: bold;
-}
-
-label {
-    color: white !important;
+    padding:30px;
+    border-radius:20px;
+    text-align:center;
+    margin-top:25px;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-# ==================================================
-# LOAD DATASET
-# ==================================================
+# ==========================================
+# LOAD DATA
+# ==========================================
 
 data = pd.read_csv("weather.csv")
 
-# ==================================================
+# ==========================================
 # PREPROCESSING
-# ==================================================
+# ==========================================
 
 label_encoder = LabelEncoder()
 
@@ -131,9 +83,9 @@ data["WeatherConditionEncoded"] = label_encoder.fit_transform(
 
 X = data[["Humidity", "Wind Speed", "Pressure"]]
 
-# ==================================================
-# CLASSIFICATION MODEL
-# ==================================================
+# ==========================================
+# MODELS
+# ==========================================
 
 classifier = RandomForestClassifier(
     n_estimators=100,
@@ -145,10 +97,6 @@ classifier.fit(
     data["WeatherConditionEncoded"]
 )
 
-# ==================================================
-# REGRESSION MODEL
-# ==================================================
-
 regressor = RandomForestRegressor(
     n_estimators=100,
     random_state=42
@@ -159,57 +107,62 @@ regressor.fit(
     data["Temperature"]
 )
 
-# ==================================================
-# HERO SECTION
-# ==================================================
+# ==========================================
+# HEADER
+# ==========================================
 
-st.markdown("""
-<div class="hero">
-    <h1>🌦 Weather & Temperature Prediction</h1>
-    <p>
-        Predict weather conditions and temperature using machine learning
-    </p>
+st.markdown(
+"""
+<div class="main-title">
+🌦 Weather & Temperature Prediction
 </div>
-""", unsafe_allow_html=True)
+""",
+unsafe_allow_html=True
+)
 
-# ==================================================
-# INPUT CARD
-# ==================================================
+st.markdown(
+"""
+<div class="subtitle">
+AI-Powered Weather Forecasting System
+</div>
+""",
+unsafe_allow_html=True
+)
 
-st.markdown('<div class="card">', unsafe_allow_html=True)
+st.markdown("---")
+
+# ==========================================
+# INPUTS
+# ==========================================
 
 humidity = st.number_input(
     "Humidity (%)",
     min_value=0.0,
     max_value=100.0,
-    value=50.0,
-    step=1.0
+    value=50.0
 )
 
 windspeed = st.number_input(
     "Wind Speed (km/h)",
     min_value=0.0,
-    value=10.0,
-    step=1.0
+    value=10.0
 )
 
 pressure = st.number_input(
     "Pressure (hPa)",
     min_value=900.0,
     max_value=1100.0,
-    value=1000.0,
-    step=1.0
+    value=1000.0
 )
 
 predict = st.button(
-    "Generate Forecast"
+    "Generate Forecast",
+    use_container_width=True
 )
 
-st.markdown('</div>', unsafe_allow_html=True)
-
-# ==================================================
+# ==========================================
 # PREDICTION
-# ==================================================
+# ==========================================
 
 if predict:
 
@@ -254,30 +207,31 @@ if predict:
     message = messages.get(weather, "")
 
     st.markdown(
-        f"""
-        <div class="result-card">
+        '<div class="result-box">',
+        unsafe_allow_html=True
+    )
 
-            <div style="font-size:70px;">
-                {icon}
-            </div>
+    st.markdown(
+        f"<h1 style='text-align:center'>{icon}</h1>",
+        unsafe_allow_html=True
+    )
 
-            <div class="result-weather">
-                {weather}
-            </div>
+    st.markdown(
+        f"<h2 style='text-align:center'>{weather}</h2>",
+        unsafe_allow_html=True
+    )
 
-            <br>
+    st.markdown(
+        f"<h1 style='text-align:center;color:#38bdf8'>{round(temperature_prediction[0],2)} °C</h1>",
+        unsafe_allow_html=True
+    )
 
-            <div class="result-temp">
-                {round(temperature_prediction[0],2)} °C
-            </div>
+    st.markdown(
+        f"<p style='text-align:center'>{message}</p>",
+        unsafe_allow_html=True
+    )
 
-            <br>
-
-            <div class="result-message">
-                {message}
-            </div>
-
-        </div>
-        """,
+    st.markdown(
+        "</div>",
         unsafe_allow_html=True
     )
