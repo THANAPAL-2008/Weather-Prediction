@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import plotly.express as px
 
 from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestClassifier
@@ -12,19 +11,17 @@ from sklearn.ensemble import RandomForestRegressor
 # ==========================================
 st.set_page_config(
     page_title="Weather Prediction Dashboard",
-    page_icon="🌦",
     layout="wide"
 )
 
 # ==========================================
-# DATA & MODEL CACHING (Keeps it lightning fast)
+# DATA & MODEL CACHING
 # ==========================================
 @st.cache_data
 def load_data():
     try:
         df = pd.read_csv("weather.csv")
     except FileNotFoundError:
-        # Emergency local fallback data
         np.random.seed(42)
         df = pd.DataFrame({
             'Humidity': np.random.uniform(30, 90, 200),
@@ -56,50 +53,37 @@ classifier, regressor = train_models(data)
 # ==========================================
 # SIDEBAR
 # ==========================================
-st.sidebar.title("🌦 Weather Dashboard")
-
-st.sidebar.info("""
-Machine Learning Project
-
-**Developer:** Thanapal
-
-**Algorithms:**
-• Random Forest Classifier
-• Random Forest Regressor
-
-**Platform:**
-• Python
-• Streamlit
-• Scikit-Learn
-""")
+st.sidebar.title("Dashboard Options")
+st.sidebar.markdown("---")
+st.sidebar.write("Use the controls on the main page to input predictive features.")
 
 # ==========================================
-# HEADER
+# MAIN HEADER
 # ==========================================
-st.title("🌦 Weather Prediction Dashboard")
-st.markdown("### Predict Weather Conditions and Temperature using Machine Learning")
+st.title("Weather Prediction Dashboard")
+st.markdown("Predict predictive outcomes using trained Machine Learning models.")
 st.markdown("---")
 
 # ==========================================
-# METRICS (Standard Minimalist Style)
+# METRICS
 # ==========================================
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.metric("Dataset Records", len(data))
+    st.metric("Total Records", len(data))
 
 with col2:
-    st.metric("Weather Classes", data['Weather Condition'].nunique())
+    st.metric("Unique Weather Classes", data['Weather Condition'].nunique())
 
 with col3:
-    st.metric("Average Temperature", f"{round(data['Temperature'].mean(), 2)} °C")
+    st.metric("Mean Temperature", f"{round(data['Temperature'].mean(), 2)} °C")
 
 st.markdown("---")
 
 # ==========================================
-# INPUT SECTION (Classic Number Inputs)
+# INPUT SECTION
 # ==========================================
-st.subheader("📥 Enter Weather Parameters")
+st.subheader("Input Parameters")
 
 col1, col2, col3 = st.columns(3)
 
@@ -117,12 +101,12 @@ with col2:
 
 with col3:
     pressure = st.number_input(
-        "Pressure",
+        "Atmospheric Pressure",
         min_value=900.0, value=1000.0
     )
 
 # ==========================================
-# PREDICTION OUTPUT (Clean, Non-Flashy Banners)
+# PREDICTION LOGIC
 # ==========================================
 custom_data = pd.DataFrame(
     [[humidity, windspeed, pressure]],
@@ -133,50 +117,27 @@ weather_prediction = classifier.predict(custom_data)
 weather_name = label_encoder.inverse_transform(weather_prediction)[0]
 temperature_prediction = regressor.predict(custom_data)[0]
 
-st.markdown("<br>", unsafe_allow_html=True)
-st.success(f"🌤 Predicted Weather Condition: **{weather_name}**")
-st.success(f"🌡 Predicted Temperature: **{round(temperature_prediction, 2)} °C**")
+# ==========================================
+# PREDICTION OUTPUT (Minimalist Cards)
+# ==========================================
+st.markdown("---")
+st.subheader("Model Predictions")
+
+res_col1, res_col2 = st.columns(2)
+
+with res_col1:
+    st.info(f"Predicted Condition: **{weather_name}**")
+
+with res_col2:
+    st.info(f"Predicted Temperature: **{round(temperature_prediction, 2)} °C**")
 
 st.markdown("---")
 
 # ==========================================
-# CHARTS
+# DATASET PREVIEW
 # ==========================================
-tab1, tab2, tab3 = st.tabs(
-    [
-        "📊 Weather Distribution",
-        "📈 Temperature Distribution",
-        "📄 Dataset Preview"
-    ]
-)
-
-with tab1:
-    st.subheader("Weather Condition Distribution")
-    counts = data['Weather Condition'].value_counts().reset_index()
-    counts.columns = ['Condition', 'Count']
-    
-    fig_bar = px.bar(counts, x='Condition', y='Count', template="plotly_dark")
-    fig_bar.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
-    st.plotly_chart(fig_bar, use_container_width=True)
-
-with tab2:
-    st.subheader("Temperature Distribution")
-    fig_line = px.line(data.reset_index(), x='index', y='Temperature', template="plotly_dark")
-    fig_line.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
-    st.plotly_chart(fig_line, use_container_width=True)
-
-with tab3:
-    st.subheader("Dataset Preview")
-    st.dataframe(
-        data.drop(columns=['WeatherConditionEncoded'], errors='ignore').head(20),
-        use_container_width=True
-    )
-
-# ==========================================
-# FOOTER
-# ==========================================
-st.markdown("---")
-st.markdown(
-    "<center>Developed by <b>Thanapal</b> 🚀<br>Weather Prediction using Machine Learning</center>",
-    unsafe_allow_html=True
+st.subheader("Dataset Summary")
+st.dataframe(
+    data.drop(columns=['WeatherConditionEncoded'], errors='ignore').head(10),
+    use_container_width=True
 )
