@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import time
 
 from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestClassifier
@@ -10,12 +11,91 @@ from sklearn.ensemble import RandomForestRegressor
 # PAGE CONFIG
 # ==========================================
 st.set_page_config(
-    page_title="Weather Prediction Dashboard",
-    layout="wide"
+    page_title="Weather Predictor",
+    layout="centered"
 )
 
 # ==========================================
-# DATA & MODEL CACHING
+# MODERN MINIMALIST CLEAN CSS
+# ==========================================
+st.markdown("""
+<style>
+    /* Dark, professional background */
+    .stApp {
+        background-color: #0f172a;
+    }
+
+    /* Clean, Standard Title */
+    .clean-title {
+        text-align: center;
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+        font-size: 2.2rem;
+        color: #f8fafc;
+        margin-bottom: 5px;
+    }
+    
+    .clean-subtitle {
+        text-align: center;
+        color: #94a3b8;
+        font-size: 0.95rem;
+        margin-bottom: 35px;
+    }
+
+    /* Neat Framework for Input Fields */
+    .input-box-frame {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 8px;
+        padding: 24px;
+        margin-bottom: 25px;
+    }
+
+    /* Standard Professional Button */
+    div.stButton > button:first-child {
+        background-color: #2563eb !important;
+        color: #ffffff !important;
+        border: none;
+        border-radius: 6px;
+        padding: 10px 20px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: background-color 0.2s ease;
+    }
+    div.stButton > button:first-child:hover {
+        background-color: #1d4ed8 !important;
+    }
+
+    /* Simple, Flat Output Display Cards */
+    .output-card-flat {
+        background: #1e293b;
+        border-radius: 8px;
+        padding: 18px;
+        text-align: center;
+        margin-top: 12px;
+    }
+    
+    .blue-side-border { border-left: 4px solid #3b82f6; }
+    .green-side-border { border-left: 4px solid #10b981; }
+    
+    .card-lbl-text {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .card-val-text {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #f8fafc;
+        margin-top: 4px;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# ==========================================
+# ML ENGINE CORE
 # ==========================================
 @st.cache_data
 def load_data():
@@ -30,7 +110,6 @@ def load_data():
             'Temperature': np.random.uniform(15, 38, 200),
             'Weather Condition': np.random.choice(['Sunny', 'Rainy', 'Cloudy', 'Overcast'], 200)
         })
-    
     le = LabelEncoder()
     df['WeatherConditionEncoded'] = le.fit_transform(df['Weather Condition'])
     return df, le
@@ -38,106 +117,68 @@ def load_data():
 @st.cache_resource
 def train_models(df):
     X = df[['Humidity', 'Wind Speed', 'Pressure']]
-    
     clf = RandomForestClassifier(n_estimators=100, random_state=42)
     clf.fit(X, df['WeatherConditionEncoded'])
     
     reg = RandomForestRegressor(n_estimators=100, random_state=42)
     reg.fit(X, df['Temperature'])
-    
     return clf, reg
 
 data, label_encoder = load_data()
 classifier, regressor = train_models(data)
 
 # ==========================================
-# SIDEBAR
+# SIMPLE HEADER
 # ==========================================
-st.sidebar.title("Dashboard Options")
-st.sidebar.markdown("---")
-st.sidebar.write("Use the controls on the main page to input predictive features.")
-
-# ==========================================
-# MAIN HEADER
-# ==========================================
-st.title("Weather Prediction Dashboard")
-st.markdown("Predict predictive outcomes using trained Machine Learning models.")
-st.markdown("---")
+st.markdown("<h1 class='clean-title'>Weather Prediction Dashboard</h1>", unsafe_allow_html=True)
+st.markdown("<p class='clean-subtitle'>Enter details below to predict the weather condition</p>", unsafe_allow_html=True)
 
 # ==========================================
-# METRICS
+# VERTICAL INPUT LAYOUT
 # ==========================================
-col1, col2, col3 = st.columns(3)
+st.markdown('<div class="input-box-frame">', unsafe_allow_html=True)
 
-with col1:
-    st.metric("Total Records", len(data))
+humidity = st.number_input("Humidity (%)", min_value=0.0, max_value=100.0, value=50.0)
+windspeed = st.number_input("Wind Speed (km/h)", min_value=0.0, value=12.0)
+pressure = st.number_input("Pressure (hPa)", min_value=900.0, value=1013.0)
 
-with col2:
-    st.metric("Unique Weather Classes", data['Weather Condition'].nunique())
-
-with col3:
-    st.metric("Mean Temperature", f"{round(data['Temperature'].mean(), 2)} °C")
-
-st.markdown("---")
+st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# INPUT SECTION
+# BUTTON & PREDICTIONS
 # ==========================================
-st.subheader("Input Parameters")
+if st.button("Predict Weather", use_container_width=True):
+    
+    with st.spinner("Processing..."):
+        time.sleep(0.2)
+        
+        custom_data = pd.DataFrame(
+            [[humidity, windspeed, pressure]],
+            columns=['Humidity', 'Wind Speed', 'Pressure']
+        )
+        
+        weather_prediction = classifier.predict(custom_data)
+        weather_name = label_encoder.inverse_transform(weather_prediction)[0]
+        temperature_prediction = regressor.predict(custom_data)[0]
+    
+    # Minimalist Professional Output Cards
+    st.markdown(f"""
+    <div class="output-card-flat blue-side-border">
+        <div class="card-lbl-text">Predicted Weather Condition</div>
+        <div class="card-val-text">{weather_name}</div>
+    </div>
+    
+    <div class="output-card-flat green-side-border">
+        <div class="card-lbl-text">Predicted Temperature</div>
+        <div class="card-val-text">{round(temperature_prediction, 1)} °C</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    humidity = st.number_input(
-        "Humidity (%)",
-        min_value=0.0, max_value=100.0, value=50.0
-    )
-
-with col2:
-    windspeed = st.number_input(
-        "Wind Speed",
-        min_value=0.0, value=10.0
-    )
-
-with col3:
-    pressure = st.number_input(
-        "Atmospheric Pressure",
-        min_value=900.0, value=1000.0
-    )
-
-# ==========================================
-# PREDICTION LOGIC
-# ==========================================
-custom_data = pd.DataFrame(
-    [[humidity, windspeed, pressure]],
-    columns=['Humidity', 'Wind Speed', 'Pressure']
-)
-
-weather_prediction = classifier.predict(custom_data)
-weather_name = label_encoder.inverse_transform(weather_prediction)[0]
-temperature_prediction = regressor.predict(custom_data)[0]
-
-# ==========================================
-# PREDICTION OUTPUT (Minimalist Cards)
-# ==========================================
-st.markdown("---")
-st.subheader("Model Predictions")
-
-res_col1, res_col2 = st.columns(2)
-
-with res_col1:
-    st.info(f"Predicted Condition: **{weather_name}**")
-
-with res_col2:
-    st.info(f"Predicted Temperature: **{round(temperature_prediction, 2)} °C**")
-
-st.markdown("---")
-
-# ==========================================
-# DATASET PREVIEW
-# ==========================================
-st.subheader("Dataset Summary")
-st.dataframe(
-    data.drop(columns=['WeatherConditionEncoded'], errors='ignore').head(10),
-    use_container_width=True
-)
+# Remove standard platform sidebars, links, and headers
+st.markdown("""
+<style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+</style>
+""", unsafe_allow_html=True)
